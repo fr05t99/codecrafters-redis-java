@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Locale;
 
 public class Main {
   public static void main(String[] args){
@@ -24,8 +25,9 @@ public class Main {
                             new InputStreamReader(clientSocket.getInputStream()));
             String line = null;
           while ((line = in.readLine()) != null) {
-              System.out.println(line);
-              clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+              if (line.toLowerCase(Locale.ROOT).contains("ping")) {
+                  clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+              }
           }
         } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
