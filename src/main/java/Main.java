@@ -22,7 +22,7 @@ public class Main {
           clientSocket = serverSocket.accept();
           OutputStream output = clientSocket.getOutputStream();
           PrintWriter writer = new PrintWriter(output, true);
-          writer.print("+PONG\r\n");
+          writer.println("+PONG\r");
         } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
         } finally {
