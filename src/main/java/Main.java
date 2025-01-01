@@ -1,6 +1,4 @@
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -20,8 +18,10 @@ public class Main {
           serverSocket.setReuseAddress(true);
           // Wait for connection from client.
           clientSocket = serverSocket.accept();
-          while (clientSocket.getInputStream().available() > 0) {
-              clientSocket.getInputStream().readAllBytes();
+            BufferedReader in =                                          // 3rd statement
+                    new BufferedReader(
+                            new InputStreamReader(clientSocket.getInputStream()));
+          while (in.readLine() != null) {
               clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
           }
         } catch (IOException e) {
