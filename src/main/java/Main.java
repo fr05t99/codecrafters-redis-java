@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,7 +17,6 @@ public class Main {
 
 
       ServerSocket serverSocket = null;
-      Socket clientSocket = null;
       int port = 6379;
       try {
           serverSocket = new ServerSocket(port);
@@ -24,7 +24,22 @@ public class Main {
           // ensures that we don't run into 'Address already in use' errors
           serverSocket.setReuseAddress(true);
           // Wait for connection from client.
-          clientSocket = serverSocket.accept();
+          while (true){
+              final Socket clientSocket = serverSocket.accept();
+              executor.execute(() -> respond(clientSocket));
+          }
+
+
+      } catch (IOException e) {
+          System.out.println("IOException: " + e.getMessage());
+      }
+
+
+        executor.shutdown();
+  }
+
+  public static void respond(final Socket clientSocket) {
+      try {
           BufferedReader in =
                   new BufferedReader(
                           new InputStreamReader(clientSocket.getInputStream()));
@@ -32,13 +47,8 @@ public class Main {
           while ((line = in.readLine()) != null) {
               if (line.toLowerCase(Locale.ROOT).contains("ping")) {
                   final OutputStream out = clientSocket.getOutputStream();
-                  executor.execute(() -> {
-                      try {
-                          respond(out);
-                      } catch (IOException e) {
-                          throw new RuntimeException(e);
-                      }
-                  });
+                  out.write("+PONG\r\n".getBytes(StandardCharsets.UTF_8));
+                  out.flush();
               }
           }
       } catch (IOException | RuntimeException e) {
@@ -52,13 +62,6 @@ public class Main {
               System.out.println("IOException: " + e.getMessage());
           }
       }
-
-
-        executor.shutdown();
-  }
-
-  public static void respond(final OutputStream out) throws IOException {
-      out.write("+PONG\r\n".getBytes());
   }
 
 }
