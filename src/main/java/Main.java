@@ -3,6 +3,8 @@ import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Main {
   public static void main(String[] args){
@@ -10,35 +12,42 @@ public class Main {
     System.out.println("Logs from your program will appear here!");
 
     //  Uncomment this block to pass the first stage
-        ServerSocket serverSocket = null;
-        Socket clientSocket = null;
-        int port = 6379;
-        try {
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+        executor.execute(Main::respond);
+        executor.shutdown();
+  }
+
+  public static void respond() {
+      ServerSocket serverSocket = null;
+      Socket clientSocket = null;
+      int port = 6379;
+      try {
           serverSocket = new ServerSocket(port);
           // Since the tester restarts your program quite often, setting SO_REUSEADDR
           // ensures that we don't run into 'Address already in use' errors
           serverSocket.setReuseAddress(true);
           // Wait for connection from client.
           clientSocket = serverSocket.accept();
-            BufferedReader in =
-                    new BufferedReader(
-                            new InputStreamReader(clientSocket.getInputStream()));
-            String line = null;
+          BufferedReader in =
+                  new BufferedReader(
+                          new InputStreamReader(clientSocket.getInputStream()));
+          String line = null;
           while ((line = in.readLine()) != null) {
               if (line.toLowerCase(Locale.ROOT).contains("ping")) {
                   clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
               }
           }
-        } catch (IOException e) {
+      } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
-        } finally {
+      } finally {
           try {
-            if (clientSocket != null) {
-              clientSocket.close();
-            }
+              if (clientSocket != null) {
+                  clientSocket.close();
+              }
           } catch (IOException e) {
-            System.out.println("IOException: " + e.getMessage());
+              System.out.println("IOException: " + e.getMessage());
           }
-        }
+      }
   }
+
 }
