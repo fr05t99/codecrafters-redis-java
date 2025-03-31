@@ -13,11 +13,8 @@ public class Main {
 
     //  Uncomment this block to pass the first stage
         ExecutorService executor = Executors.newFixedThreadPool(5);
-        executor.execute(Main::respond);
-        executor.shutdown();
-  }
 
-  public static void respond() {
+
       ServerSocket serverSocket = null;
       Socket clientSocket = null;
       int port = 6379;
@@ -34,10 +31,17 @@ public class Main {
           String line = null;
           while ((line = in.readLine()) != null) {
               if (line.toLowerCase(Locale.ROOT).contains("ping")) {
-                  clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+                  final OutputStream out = clientSocket.getOutputStream();
+                  executor.execute(() -> {
+                      try {
+                          respond(out);
+                      } catch (IOException e) {
+                          throw new RuntimeException(e);
+                      }
+                  });
               }
           }
-      } catch (IOException e) {
+      } catch (IOException | RuntimeException e) {
           System.out.println("IOException: " + e.getMessage());
       } finally {
           try {
@@ -48,6 +52,13 @@ public class Main {
               System.out.println("IOException: " + e.getMessage());
           }
       }
+
+
+        executor.shutdown();
+  }
+
+  public static void respond(final OutputStream out) throws IOException {
+      out.write("+PONG\r\n".getBytes());
   }
 
 }
